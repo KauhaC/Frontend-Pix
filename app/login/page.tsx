@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Cookies from "js-cookie";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -19,9 +20,11 @@ export default function LoginPage() {
 
     if (response.ok) {
       localStorage.setItem("token", data.token);
-      window.location.href = "/dashboard";
-    } else {
-      setError(data.error || "Erro ao fazer login");
+      Cookies.set("token", data.token, { expires: 1 }); // expira em 1 dia
+      postMessage("Login realizado com sucesso!");
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1000);
     }
   };
 
