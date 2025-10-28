@@ -27,30 +27,91 @@ export default function DashboardPage() {
   }, [router]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
-      <div className="bg-white p-6 rounded shadow-md text-center w-full max-w-md">
-        <h1 className="text-2xl font-semibold mb-4">Dashboard</h1>
-        {error && <p className="text-red-500">{error}</p>}
-        {info ? (
-          <>
-            <p className="mb-2 text-green-600">{info.message}</p>
-            <p className="text-gray-700 text-sm">
-              Usuário: {info.payload.email}
-            </p>
-            <button
-              onClick={() => {
-                localStorage.removeItem("token");
-                router.push("/login");
-              }}
-              className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-            >
-              Sair
-            </button>
-          </>
-        ) : (
-          !error && <p>Carregando...</p>
-        )}
+    <div className="corpo">
+
+      <div className="cabecalho">
+        <div className="pessoa">
+          <p>Usuario: XYZ</p>
+          <p>Email: XYZ</p>
+          <p>Conta: XYZ</p>
+          <p>Saldo: XYZ</p>
+
+        </div>
+
+        <div className="titulo">
+          <h1 id="nomebank">KRE BANK</h1>
+        </div>
+
+        <div className="sair">
+          <h3>SAIR</h3>
+          {error && <p className="text-red-500">{error}</p>}
+          {info ? (
+            <>
+              <p className="mb-2 text-green-600">{info.message}</p>
+              <p className="text-gray-700 text-sm">
+                Usuário: {info.payload.email}
+              </p>
+              <button
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  router.push("/login");
+                }}
+                className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              >
+                Sair
+              </button>
+            </>
+          ) : (
+            !error && <p>Carregando...</p>
+          )}
+        </div>
       </div>
+
+
+      <div className="conteudo">
+
+        <div className="card">
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p><p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p><p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p><p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p><p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
+        </div>
+
+        <div className="card">
+
+        </div>
+
+        <div className="card">
+
+        </div>
+      </div>
+
+      <div className="rodape">
+        <p>desenvolvido por k10 e rembold</p>
+      </div>
+
     </div>
+
+
   );
 }
