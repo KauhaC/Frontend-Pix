@@ -1,52 +1,72 @@
 "use client";
 
 import { useState } from "react";
-import Cookies from "js-cookie";
 
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export default function RegisterPage() {
+  const [cpf, setCpf] = useState("");
+  const [nome, setNome] = useState("");
+  const [senha, setSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
+
+    if (senha !== confirmarSenha) {
+      setError("As senhas não coincidem.");
+      return;
+    }
 
     try {
-      const response = await fetch("/api/login", {
+      const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ cpf, nome, senha }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem("token", data.token);
-        Cookies.set("token", data.token, { expires: 1 });
-        alert("Login realizado com sucesso!");
-        setTimeout(() => (window.location.href = "/dashboard"), 1000);
+        setSuccess("Conta criada com sucesso! Você já pode fazer login.");
+        setCpf("");
+        setNome("");
+        setSenha("");
+        setConfirmarSenha("");
       } else {
-        setError(data.message || "Credenciais inválidas.");
+        setError(data.message || "Erro ao criar conta.");
       }
     } catch {
-      setError("Erro ao conectar com o servidor.");
+      setError("Erro de conexão com o servidor.");
     }
   };
 
   return (
-    <div className="login-container">
-      <form className="login-card" onSubmit={handleLogin}>
+    <div className="register-container">
+      <form className="register-card" onSubmit={handleRegister}>
         <h1>KRE BANK</h1>
-        <h2>Acesse sua conta</h2>
+        <h2>Crie sua conta</h2>
+
+        <label>
+          <span>Nome completo</span>
+          <input
+            type="text"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            placeholder="Digite seu nome"
+            required
+          />
+        </label>
 
         <label>
           <span>CPF</span>
           <input
             type="text"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={cpf}
+            onChange={(e) => setCpf(e.target.value)}
             placeholder="Digite seu CPF"
             required
           />
@@ -57,8 +77,8 @@ export default function LoginPage() {
           <div className="senha-wrapper">
             <input
               type={mostrarSenha ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
               placeholder="Digite sua senha"
               required
             />
@@ -72,20 +92,32 @@ export default function LoginPage() {
           </div>
         </label>
 
-        <a href="#" className="esqueci-senha">
-          Esqueci minha senha
-        </a>
+        <label>
+          <span>Confirmar senha</span>
+          <input
+            type="password"
+            value={confirmarSenha}
+            onChange={(e) => setConfirmarSenha(e.target.value)}
+            placeholder="Confirme sua senha"
+            required
+          />
+        </label>
 
         {error && <p className="erro">{error}</p>}
+        {success && <p className="sucesso">{success}</p>}
 
-        <button type="submit" className="btn-entrar">
-          Entrar
+        <button type="submit" className="btn-criar">
+          Criar conta
         </button>
 
-        <p className="criar-conta">
-          Ainda não tem conta? <a href="/register">Criar conta</a>
+        <p className="ja-tem-conta">
+          Já tem uma conta? <a href="/login">Entrar</a>
         </p>
       </form>
+
+      <div className="register-image">
+        <img src="/login-image.png" alt="Imagem de fundo" />
+      </div>
 
       <style jsx>{`
         body {
@@ -98,14 +130,15 @@ export default function LoginPage() {
           align-items: center;
         }
 
-        .login-container {
+        .register-container {
           display: flex;
           justify-content: center;
           align-items: center;
           height: 100vh;
+          gap: 50px;
         }
 
-        .login-card {
+        .register-card {
           background: #fff;
           padding: 40px;
           border-radius: 12px;
@@ -171,21 +204,7 @@ export default function LoginPage() {
           font-size: 18px;
         }
 
-        .esqueci-senha {
-          display: block;
-          text-align: right;
-          font-size: 13px;
-          color: #ff7b00;
-          text-decoration: none;
-          margin-top: -8px;
-          margin-bottom: 10px;
-        }
-
-        .esqueci-senha:hover {
-          text-decoration: underline;
-        }
-
-        .btn-entrar {
+        .btn-criar {
           background-color: #ff7b00;
           color: #fff;
           border: none;
@@ -196,9 +215,10 @@ export default function LoginPage() {
           font-weight: 600;
           cursor: pointer;
           transition: background 0.3s;
+          margin-top: 10px;
         }
 
-        .btn-entrar:hover {
+        .btn-criar:hover {
           background-color: #e76e00;
         }
 
@@ -208,20 +228,42 @@ export default function LoginPage() {
           margin-bottom: 10px;
         }
 
-        .criar-conta {
+        .sucesso {
+          color: green;
+          font-size: 13px;
+          margin-bottom: 10px;
+        }
+
+        .ja-tem-conta {
           font-size: 14px;
           margin-top: 20px;
           color: #555;
         }
 
-        .criar-conta a {
+        .ja-tem-conta a {
           color: #ff7b00;
           font-weight: 600;
           text-decoration: none;
         }
 
-        .criar-conta a:hover {
+        .ja-tem-conta a:hover {
           text-decoration: underline;
+        }
+
+        .register-image img {
+          width: 350px;
+          border-radius: 12px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 768px) {
+          .register-container {
+            flex-direction: column;
+          }
+
+          .register-image img {
+            display: none;
+          }
         }
       `}</style>
     </div>

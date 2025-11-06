@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import "./dashboard.css";
 
 export default function DashboardPage() {
   const [info, setInfo] = useState<any>(null);
@@ -26,92 +27,68 @@ export default function DashboardPage() {
       .catch(() => setError("Erro ao conectar com servidor"));
   }, [router]);
 
+  const logout = () => {
+    localStorage.removeItem("token");
+    router.push("/login");
+  };
+
   return (
-    <div className="corpo">
+    <div className="dashboard">
+      <header className="dashboard-header">
+        <div className="logo">
+          <div className="icon">🏦</div>
+          <h2>KRE BANK</h2>
+        </div>
+        <button className="logout-btn" onClick={logout}>
+          Sair
+        </button>
+      </header>
 
-      <div className="cabecalho">
-        <div className="pessoa">
-          <p>Usuario: XYZ</p>
-          <p>Email: XYZ</p>
-          <p>Conta: XYZ</p>
-          <p>Saldo: XYZ</p>
+      <section className="user-info">
+        <img
+          src="https://i.pravatar.cc/100"
+          alt="Avatar"
+          className="avatar"
+        />
+        <div>
+          <h3>Olá, Carlos</h3>
+          <p>Agência 0001 Conta 12345-6</p>
+        </div>
+      </section>
+
+      <main className="main-content">
+        <h1>O que você gostaria de fazer?</h1>
+        <div className="cards">
+
+          <div className="card">
+            <div className="icon">🧾</div>
+            <h3>Extrato</h3>
+            <p>Consulte suas transações</p>
+          </div>
+
+          {/* === CARD PIX CLICÁVEL === */}
+          <div
+            className="card active"
+            onClick={() => router.push("/transferencia")}
+            style={{ cursor: "pointer" }}
+          >
+            <div className="icon">💸</div>
+            <h3>PIX</h3>
+            <p>Envie e receba dinheiro</p>
+          </div>
+
+          <div className="card">
+            <div className="icon">🔑</div>
+            <h3>Minhas Chaves</h3>
+            <p>Gerencie suas chaves</p>
+          </div>
 
         </div>
+      </main>
 
-        <div className="titulo">
-          <h1 id="nomebank">KRE BANK</h1>
-        </div>
-
-        <div className="sair">
-          <h3>SAIR</h3>
-          {error && <p className="text-red-500">{error}</p>}
-          {info ? (
-            <>
-              <p className="mb-2 text-green-600">{info.message}</p>
-              <p className="text-gray-700 text-sm">
-                Usuário: {info.payload.email}
-              </p>
-              <button
-                onClick={() => {
-                  localStorage.removeItem("token");
-                  router.push("/login");
-                }}
-                className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-              >
-                Sair
-              </button>
-            </>
-          ) : (
-            !error && <p>Carregando...</p>
-          )}
-        </div>
-      </div>
-
-
-      <div className="conteudo">
-
-        <div className="card">
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p><p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p><p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p><p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p><p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-          <p>teteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</p>
-        </div>
-
-        <div className="card">
-
-        </div>
-
-        <div className="card">
-
-        </div>
-      </div>
-
-      <div className="rodape">
-        <p>desenvolvido por k10 e rembold</p>
-      </div>
-
+      <footer className="footer">
+        <p>Desenvolvido por K10 e Rembold</p>
+      </footer>
     </div>
-
-
   );
 }
