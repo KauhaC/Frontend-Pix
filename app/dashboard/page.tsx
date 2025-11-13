@@ -8,6 +8,9 @@ export default function DashboardPage() {
   const [info, setInfo] = useState<any>(null);
   const [error, setError] = useState("");
   const router = useRouter();
+  const [mostrarSaldo, setMostrarSaldo] = useState(false);
+  const saldo = 5000.0; // valor do saldo (pode vir de props, API etc.)
+  
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -50,17 +53,36 @@ export default function DashboardPage() {
           alt="Avatar"
           className="avatar"
         />
-        <div>
-          <h3>Olá, Carlos</h3>
-          <p>Agência 0001 Conta 12345-6</p>
+        <div className="saldo-wrapper">
+          <h3>Olá, Pedro</h3>
+
+          <h3>
+            Saldo:{" "}
+            {mostrarSaldo ? (
+              `R$ ${saldo.toLocaleString("pt-BR", {minimumFractionDigits: 2,})}`) : ("••••••")}
+            <button
+              type="button"
+              className="mostrar-saldo"
+              onClick={() => setMostrarSaldo(!mostrarSaldo)}
+              style={{ marginLeft: "8px" }}
+            >
+              {mostrarSaldo ? "🙈" : "👁️"}
+            </button>
+          </h3>
         </div>
+
+
+
       </section>
 
       <main className="main-content">
         <h1>O que você gostaria de fazer?</h1>
         <div className="cards">
 
-          <div className="card">
+          <div className="card"
+            onClick={() => router.push("/extrato")}
+            style={{ cursor: "pointer" }}
+          >
             <div className="icon">🧾</div>
             <h3>Extrato</h3>
             <p>Consulte suas transações</p>

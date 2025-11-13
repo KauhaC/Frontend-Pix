@@ -1,22 +1,45 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import "./transferencia.css";
 
 export default function TransferenciaPage() {
+  const router = useRouter();
+
   const [destinatario, setDestinatario] = useState("");
   const [valor, setValor] = useState("");
+  const [tipoChave, setTipoChave] = useState("cpf");
   const [chavePix, setChavePix] = useState("");
   const [descricao, setDescricao] = useState("");
   const [mensagem, setMensagem] = useState("");
 
+  // === formata automaticamente o campo conforme tipo da chave ===
+  const handleChaveChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    if (tipoChave === "cpf") {
+      value = value
+        .replace(/\D/g, "")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
+        .substring(0, 14);
+    } else if (tipoChave === "telefone") {
+      value = value
+        .replace(/\D/g, "")
+        .replace(/^(\d{2})(\d)/g, "($1) $2")
+        .replace(/(\d{5})(\d{4})$/, "$1-$2")
+        .substring(0, 15);
+    }
+    setChavePix(value);
+  };
+
+  // === envia a transferência e gera o CSV ===
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Simula envio ao backend
     setMensagem("Transferência realizada com sucesso!");
 
-    // Cria CSV com os dados
-    const csvContent = `Destinatário,Valor,Chave PIX,Descrição,Data\n${destinatario},${valor},${chavePix},${descricao},${new Date().toLocaleString("pt-BR")}`;
+    const csvContent = `Destinatário,Valor,Tipo de Chave,Chave PIX,Descrição,Data\n${destinatario},${valor},${tipoChave},${chavePix},${descricao},${new Date().toLocaleString("pt-BR")}`;
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -24,162 +47,102 @@ export default function TransferenciaPage() {
     link.download = `comprovante_pix_${Date.now()}.csv`;
     link.click();
 
-    // Redireciona para o comprovante após 1 segundo
-    setTimeout(() => {
-      window.location.href = "/comprovante";
-    }, 1000);
+    setTimeout(() => router.push("/comprovante"), 1000);
   };
 
   return (
-    <div className="transferencia-container">
-      <form className="transferencia-card" onSubmit={handleSubmit}>
-        <h1>KRE BANK</h1>
-        <h2>Transferência PIX</h2>
-
-        <label>
-          <span>Destinatário</span>
-          <input
-            type="text"
-            value={destinatario}
-            onChange={(e) => setDestinatario(e.target.value)}
-            placeholder="Nome do destinatário"
-            required
-          />
-        </label>
-
-        <label>
-          <span>Valor</span>
-          <input
-            type="number"
-            step="0.01"
-            value={valor}
-            onChange={(e) => setValor(e.target.value)}
-            placeholder="Digite o valor"
-            required
-          />
-        </label>
-
-        <label>
-          <span>Chave PIX</span>
-          <input
-            type="text"
-            value={chavePix}
-            onChange={(e) => setChavePix(e.target.value)}
-            placeholder="E-mail, CPF ou número"
-            required
-          />
-        </label>
-
-        <label>
-          <span>Descrição</span>
-          <input
-            type="text"
-            value={descricao}
-            onChange={(e) => setDescricao(e.target.value)}
-            placeholder="Opcional"
-          />
-        </label>
-
-        {mensagem && <p className="sucesso">{mensagem}</p>}
-
-        <button type="submit" className="btn-confirmar">
-          Confirmar transferência
+    <div className="transferencia-page">
+      {/* === HEADER === */}
+      <header className="dashboard-header">
+        <div className="logo">
+          <div className="icon">🏦</div>
+          <h2>KRE BANK</h2>
+        </div>
+        <button
+          className="logout-btn voltar-btn"
+          onClick={() => router.push("/dashboard")}
+        >
+          ← Voltar
         </button>
-      </form>
+      </header>
 
-      <style jsx>{`
-        body {
-          background-color: #f9f6f3;
-          font-family: "Poppins", sans-serif;
-          margin: 0;
-          height: 100vh;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
+      {/* === FORMULÁRIO === */}
+      <div className="transferencia-container">
+        <form className="transferencia-card" onSubmit={handleSubmit}>
+          <h2>Transferência PIX</h2>
 
-        .transferencia-container {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100vh;
-        }
+          <label>
+            <span>Tipo de Chave PIX</span>
+            <select
+              value={tipoChave}
+              onChange={(e) => {
+                setTipoChave(e.target.value);
+                setChavePix("");
+              }}
+              required
+            >
+              <option value="cpf">CPF</option>
+              <option value="email">E-mail</option>
+              <option value="telefone">Telefone</option>
+              <option value="aleatoria">Chave aleatória</option>
+            </select>
+          </label>
 
-        .transferencia-card {
-          background: #fff;
-          padding: 40px;
-          border-radius: 12px;
-          width: 400px;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-          text-align: center;
-        }
+          <label>
+            <span>Chave PIX</span>
+            <input
+              type="text"
+              value={chavePix}
+              onChange={handleChaveChange}
+              placeholder={
+                tipoChave === "cpf"
+                  ? "000.000.000-00"
+                  : tipoChave === "telefone"
+                  ? "(00) 00000-0000"
+                  : tipoChave === "email"
+                  ? "exemplo@email.com"
+                  : "Chave aleatória"
+              }
+              required
+            />
+          </label>
 
-        h1 {
-          font-size: 26px;
-          color: #000;
-          margin-bottom: 5px;
-        }
+          <label>
+            <span>Valor</span>
+            <input
+              type="number"
+              step="0.01"
+              value={valor}
+              onChange={(e) => setValor(e.target.value)}
+              placeholder="Digite o valor"
+              required
+            />
+          </label>
 
-        h2 {
-          font-size: 18px;
-          color: #333;
-          margin-bottom: 25px;
-        }
 
-        label {
-          display: block;
-          text-align: left;
-          margin-bottom: 15px;
-        }
+          <label>
+            <span>Descrição</span>
+            <input
+              type="text"
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              placeholder="Opcional"
+            />
+          </label>
 
-        label span {
-          display: block;
-          font-size: 14px;
-          font-weight: 500;
-          color: #222;
-          margin-bottom: 6px;
-        }
+          {mensagem && <p className="sucesso">{mensagem}</p>}
 
-        input {
-          width: 100%;
-          padding: 12px;
-          border: 1px solid #ddd;
-          border-radius: 8px;
-          font-size: 14px;
-          box-sizing: border-box;
-          transition: 0.2s;
-        }
+          <button type="submit" className="btn-confirmar">
+            Confirmar transferência
+          </button>
+        </form>
+      </div>
 
-        input:focus {
-          border-color: #ff7b00;
-          outline: none;
-          box-shadow: 0 0 4px rgba(255, 123, 0, 0.2);
-        }
+      {/* === FOOTER === */}
+      <footer className="footer">
+        <p>Desenvolvido por K10 e Rembold</p>
+      </footer>
 
-        .btn-confirmar {
-          background-color: #ff7b00;
-          color: #fff;
-          border: none;
-          padding: 12px;
-          width: 100%;
-          border-radius: 8px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.3s;
-        }
-
-        .btn-confirmar:hover {
-          background-color: #e76e00;
-        }
-
-        .sucesso {
-          color: green;
-          font-size: 14px;
-          margin-bottom: 10px;
-          font-weight: 500;
-        }
-      `}</style>
     </div>
   );
 }
