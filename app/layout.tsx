@@ -1,19 +1,13 @@
-// app/layout.tsx
-import "./globals.css";
+import { AuthProvider } from './context/AuthContext';
 
-export const metadata = {
-  title: "Banco Pix",
-  description: "Sistema Pix Online",
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
-      <body className="bg-gray-50 text-gray-800">{children}</body>
+      <body>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }

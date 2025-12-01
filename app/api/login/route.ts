@@ -1,16 +1,29 @@
 import { NextResponse } from "next/server";
-import { signToken } from "@/lib/jwt";
-
-// Usuário fixo apenas para teste
-const USER = { email: "teste@exemplo.com", password: "123456" };
 
 export async function POST(req: Request) {
-  const { email, password } = await req.json();
+  const { cpf_cnpj, senha } = await req.json();
 
-  if (email !== USER.email || password !== USER.password) {
-    return NextResponse.json({ error: "Credenciais inválidas" }, { status: 401 });
+  const res = await fetch("http://localhost:4000/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ cpf_cnpj, senha }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    return NextResponse.json(data, { status: res.status });
   }
 
-  const token = await signToken({ email });
-  return NextResponse.json({ token });
+  const response = NextResponse.json(data);
+
+  response.cookies.set("token", data.token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 2 * 60 * 60, // 2 horas em segundos
+  });
+
+  return response;
 }

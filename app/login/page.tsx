@@ -2,33 +2,80 @@
 
 import { useState } from "react";
 import Cookies from "js-cookie";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+
+// Schema Zod
+const loginSchema = z.object({
+  cpfCnpj: z
+    .string()
+    .refine((v) => {
+      const n = v.replace(/\D/g, "");
+      return n.length === 11 || n.length === 14;
+    }, "CPF ou CNPJ inválido"),
+  senha: z.string().min(1, "Informe sua senha"),
+});
+
+type LoginData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const router = useRouter();
   const [error, setError] = useState("");
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginData>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  // 🔥 MÁSCARA CORRIGIDA
+  function aplicarMascara(valor: string) {
+    const digitos = valor.replace(/\D/g, "");
+
+    if (digitos.length <= 11) {
+      // CPF
+      return digitos
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    }
+
+    // CNPJ
+    return digitos
+      .replace(/^(\d{2})(\d)/, "$1.$2")
+      .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1/$2")
+      .replace(/(\d{4})(\d)/, "$1-$2");
+  }
+
+  const onSubmit = async (data: LoginData) => {
     setError("");
+
+    const somenteNumeros = data.cpfCnpj.replace(/\D/g, "");
 
     try {
       const response = await fetch("/api/login", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          cpf_cnpj: somenteNumeros,
+          senha: data.senha,
+        }),
       });
 
-      const data = await response.json();
+      const respBody = await response.json();
 
       if (response.ok) {
-        localStorage.setItem("token", data.token);
-        Cookies.set("token", data.token, { expires: 1 });
-        alert("Login realizado com sucesso!");
-        setTimeout(() => (window.location.href = "/dashboard"), 1000);
+        localStorage.setItem("user", JSON.stringify(respBody.usuario));
+        router.push("/dashboard");
       } else {
-        setError(data.message || "Credenciais inválidas.");
+        setError(respBody.error || "Credenciais inválidas.");
       }
     } catch {
       setError("Erro ao conectar com o servidor.");
@@ -37,53 +84,45 @@ export default function LoginPage() {
 
   return (
     <div className="login-container">
-      <form className="login-card" onSubmit={handleLogin}>
+      <form className="login-card" onSubmit={handleSubmit(onSubmit)}>
         <h1>KRE BANK</h1>
         <h2>Acesse sua conta</h2>
 
         <label>
-          <span>CPF</span>
+          <span>CPF / CNPJ</span>
           <input
             type="text"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Digite seu CPF"
-            required
+            {...register("cpfCnpj")}
+            onChange={(e) => {
+              const masked = aplicarMascara(e.target.value);
+              setValue("cpfCnpj", masked, { shouldValidate: true });
+            }}
+            maxLength={18}
+            placeholder="Digite seu CPF ou CNPJ"
           />
+          {errors.cpfCnpj && (
+            <p className="erro">{errors.cpfCnpj.message}</p>
+          )}
         </label>
 
         <label>
           <span>Senha</span>
-          <div className="senha-wrapper">
-            <input
-              type={mostrarSenha ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Digite sua senha"
-              required
-            />
-            <button
-              type="button"
-              className="mostrar-senha"
-              onClick={() => setMostrarSenha(!mostrarSenha)}
-            >
-              {mostrarSenha ? "🙈" : "👁️"}
-            </button>
-          </div>
+          <input
+            type="password"
+            {...register("senha")}
+            placeholder="Digite sua senha"
+          />
+          {errors.senha && <p className="erro">{errors.senha.message}</p>}
         </label>
-
-        <a href="#" className="esqueci-senha">
-          Esqueci minha senha
-        </a>
 
         {error && <p className="erro">{error}</p>}
 
-        <button type="submit" className="btn-entrar">
-          Entrar
+        <button type="submit" className="btn-entrar" disabled={isSubmitting}>
+          {isSubmitting ? "Entrando..." : "Entrar"}
         </button>
 
         <p className="criar-conta">
-          Ainda não tem conta? <a href="/register">Criar conta</a>
+          Novo por aqui? <a href="/register">Criar conta</a>
         </p>
       </form>
 
@@ -92,10 +131,6 @@ export default function LoginPage() {
           background-color: #f9f6f3;
           font-family: "Poppins", sans-serif;
           margin: 0;
-          height: 100vh;
-          display: flex;
-          justify-content: center;
-          align-items: center;
         }
 
         .login-container {
@@ -103,6 +138,7 @@ export default function LoginPage() {
           justify-content: center;
           align-items: center;
           height: 100vh;
+          background-color: #f8f7f5;
         }
 
         .login-card {
@@ -115,8 +151,8 @@ export default function LoginPage() {
         }
 
         h1 {
-          font-size: 26px;
-          color: #000;
+          font-size: 28px;
+          color: #f27f0d;
           margin-bottom: 5px;
         }
 
@@ -133,11 +169,11 @@ export default function LoginPage() {
         }
 
         label span {
-          display: block;
           font-size: 14px;
           font-weight: 500;
           color: #222;
           margin-bottom: 6px;
+          display: block;
         }
 
         input {
@@ -151,55 +187,9 @@ export default function LoginPage() {
         }
 
         input:focus {
-          border-color: #ff7b00;
+          border-color: #f27f0d;
           outline: none;
-          box-shadow: 0 0 4px rgba(255, 123, 0, 0.2);
-        }
-
-        .senha-wrapper {
-          display: flex;
-          align-items: center;
-          position: relative;
-        }
-
-        .mostrar-senha {
-          position: absolute;
-          right: 10px;
-          background: none;
-          border: none;
-          cursor: pointer;
-          font-size: 18px;
-        }
-
-        .esqueci-senha {
-          display: block;
-          text-align: right;
-          font-size: 13px;
-          color: #ff7b00;
-          text-decoration: none;
-          margin-top: -8px;
-          margin-bottom: 10px;
-        }
-
-        .esqueci-senha:hover {
-          text-decoration: underline;
-        }
-
-        .btn-entrar {
-          background-color: #ff7b00;
-          color: #fff;
-          border: none;
-          padding: 12px;
-          width: 100%;
-          border-radius: 8px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.3s;
-        }
-
-        .btn-entrar:hover {
-          background-color: #e76e00;
+          box-shadow: 0 0 4px rgba(242, 127, 13, 0.2);
         }
 
         .erro {
@@ -208,16 +198,34 @@ export default function LoginPage() {
           margin-bottom: 10px;
         }
 
+        .btn-entrar {
+          background-color: #f27f0d;
+          color: #fff;
+          border: none;
+          padding: 12px;
+          width: 100%;
+          border-radius: 8px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: 0.3s;
+          margin-top: 10px;
+        }
+
+        .btn-entrar:hover {
+          background-color: #d96f07;
+        }
+
         .criar-conta {
-          font-size: 14px;
           margin-top: 20px;
+          font-size: 14px;
           color: #555;
         }
 
         .criar-conta a {
-          color: #ff7b00;
-          font-weight: 600;
+          color: #f27f0d;
           text-decoration: none;
+          font-weight: bold;
         }
 
         .criar-conta a:hover {

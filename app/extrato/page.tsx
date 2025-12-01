@@ -1,232 +1,214 @@
 "use client";
 
-import { useState } from "react";
+import React, { JSX, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import "../globals.css"; // Header e footer globais
+import "./extrato.css";
+import Cookies from "js-cookie";
 
-export default function ExtratoPage() {
-  const [mostrarSaldo, setMostrarSaldo] = useState(false);
+type TransacaoItem = {
+  id: number;
+  data_transferencia: string; 
+  valor: number;
+  mensagem?: string | null;
+  chave_origem: string;
+  chave_destino: string;
+  tipo: "ENTRADA" | "SAIDA" | "SAÍDA" | "ENVIADO" | "RECEBIDO";
+};
+
+type ApiResponse = {
+  total: number;
+  page: number;
+  size: number;
+  items: TransacaoItem[];
+};
+
+export default function ExtratoPage(): JSX.Element {
   const router = useRouter();
+  const API = "http://localhost:4000";
+  const token = Cookies.get("token");
 
-  const transacoes = [
-    {
-      data: "25/07/2024 14:30",
-      descricao: "João da Silva\njoao.silva@email.com",
-      tipo: "PIX Recebido",
-      valor: "+ R$ 50,00",
-    },
-    {
-      data: "25/07/2024 10:15",
-      descricao: "Supermercado ABC\n12.345.678/0001-90",
-      tipo: "PIX Enviado",
-      valor: "- R$ 120,00",
-    },
-    {
-      data: "24/07/2024 20:05",
-      descricao: "Maria Oliveira\n(11) 98765-4321",
-      tipo: "PIX Enviado",
-      valor: "- R$ 75,50",
-    },
-    {
-      data: "24/07/2024 09:00",
-      descricao: "Empresa XYZ\nPagamento Salário",
-      tipo: "PIX Recebido",
-      valor: "+ R$ 2.500,00",
-    },
-    {
-      data: "23/07/2024 18:45",
-      descricao: "Netflix\nAssinatura Mensal",
-      tipo: "PIX Enviado",
-      valor: "- R$ 39,90",
-    },
-  ];
+  const [items, setItems] = useState<TransacaoItem[]>([]);
+  const [page, setPage] = useState<number>(1);
+  const [size, setSize] = useState<number>(10);
+  const [total, setTotal] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [erro, setErro] = useState<string>("");
 
-  const saldoDisponivel = 1234.56;
-  const entradasHoje = 85.9;
-  const saidasHoje = 120.0;
+  useEffect(() => {
+    fetchTransactions(page, size);
+  }, [page, size]);
 
-  const exportarCSV = () => {
-    const csvHeader = "Data,Descrição,Tipo,Valor\n";
-    const csvRows = transacoes
-      .map(
-        (t) =>
-          `${t.data},"${t.descricao.replace(/\n/g, " - ")}",${t.tipo},${t.valor}`
-      )
-      .join("\n");
+  async function fetchTransactions(p: number, s: number) {
+    setLoading(true);
+    setErro("");
+    try {
+      const res = await fetch(`${API}/transacoes?page=${p}&size=${s}`, {
+        credentials: "include",
+      });
 
-    const blob = new Blob([csvHeader + csvRows], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "extrato_pix.csv";
-    link.click();
-  };
+      const data: ApiResponse = await res.json();
+      if (!res.ok) {
+        setErro(data && (data as any).error ? (data as any).error : "Erro ao buscar transações");
+        setItems([]);
+        setTotal(0);
+      } else {
+        setItems(data.items || []);
+        setTotal(data.total || 0);
+      }
+    } catch (e) {
+      console.error(e);
+      setErro("Erro de conexão ao buscar transações");
+      setItems([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const totalPages = Math.max(1, Math.ceil(total / size));
+
+  function formatCurrency(v: number) {
+    try {
+      return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    } catch {
+      return `R$ ${v.toFixed(2)}`;
+    }
+  }
+
+  function formatDate(iso: string) {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return iso;
+    }
+  }
 
   return (
-    <div className="dashboard">
-      {/* HEADER GLOBAL */}
+    <div className="extrato-page">
       <header className="dashboard-header">
         <div className="logo">
           <div className="icon">🏦</div>
           <h2>KRE BANK</h2>
         </div>
-        <button className="logout-btn" onClick={() => router.push("/dashboard")}>
-          Voltar
-        </button>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <button className="logout-btn voltar-btn" onClick={() => router.push("/dashboard")}>
+            ← Voltar
+          </button>
+        </div>
       </header>
 
       <main className="extrato-container">
-        <div className="extrato-card">
-          <h1>Meu Extrato</h1>
+        <h1>Extrato</h1>
 
-          <div className="saldo-box">
-            <button onClick={exportarCSV} className="btn-exportar">
-              ⬇️ Exportar CSV
-            </button>
-
-            <h3>Saldo Disponível</h3>
-            <h2>
-              {mostrarSaldo
-                ? `R$ ${saldoDisponivel.toLocaleString("pt-BR", {
-                    minimumFractionDigits: 2,
-                  })}`
-                : "••••••"}
-              <button
-                className="mostrar-saldo"
-                onClick={() => setMostrarSaldo(!mostrarSaldo)}
-              >
-                {mostrarSaldo ? "🙈" : "👁️"}
-              </button>
-            </h2>
-
-            <p>
-              <strong>Entradas de Hoje:</strong> + R${" "}
-              {entradasHoje.toFixed(2).replace(".", ",")}
-            </p>
-            <p>
-              <strong>Saídas de Hoje:</strong> - R${" "}
-              {saidasHoje.toFixed(2).replace(".", ",")}
-            </p>
+        <div className="extrato-controls">
+          <div>
+            <label>Linhas por página:&nbsp;
+              <select value={size} onChange={(e) => { setPage(1); setSize(Number(e.target.value)); }}>
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+              </select>
+            </label>
           </div>
 
-          <h2>Histórico de Transações</h2>
-
-          <div className="tabela-transacoes">
-            <table>
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Descrição</th>
-                  <th>Tipo</th>
-                  <th>Valor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transacoes.map((t, i) => (
-                  <tr key={i}>
-                    <td>{t.data}</td>
-                    <td style={{ whiteSpace: "pre-line" }}>{t.descricao}</td>
-                    <td>{t.tipo}</td>
-                    <td>{t.valor}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="pagination-info">
+            <span>Página {page} / {totalPages}</span>
+            <span style={{ marginLeft: 12 }}>Total: {total}</span>
           </div>
         </div>
+
+        {loading ? (
+          <div className="loader">Carregando transações...</div>
+        ) : erro ? (
+          <div className="erro">{erro}</div>
+        ) : (
+          <>
+            <div className="table-wrapper">
+              <table className="extrato-table">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Tipo</th>
+                    <th>Valor</th>
+                    <th>Mensagem</th>
+                    <th>Origem → Destino</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ textAlign: "center", padding: 20 }}>
+                        Nenhuma transação encontrada
+                      </td>
+                    </tr>
+                  ) : (
+                    items.map((t) => (
+                      <tr key={t.id}>
+                        <td>{formatDate(t.data_transferencia)}</td>
+                        <td className={t.tipo === "ENTRADA" || t.tipo === "RECEBIDO" ? "tipo-entrada" : "tipo-saida"}>
+                          {t.tipo}
+                        </td>
+                        <td className={t.tipo === "ENTRADA" || t.tipo === "RECEBIDO" ? "valor-entrada" : "valor-saida"}>
+                          {formatCurrency(Number(t.valor))}
+                        </td>
+                        <td>{t.mensagem ?? "-"}</td>
+                        <td className="chaves-col">
+                          <div style={{ fontSize: 13 }}>{t.chave_origem}</div>
+                          <div style={{ fontSize: 13, color: "#666" }}>→ {t.chave_destino}</div>
+                        </td>
+                        <td>
+                          <button
+                            className="btn-small"
+                            onClick={() => router.push(`/comprovante/${t.id}`)}
+                          >
+                            Ver
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="extrato-footer">
+              <div className="pagination-buttons">
+                <button className="btn-page" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
+                  ← Anterior
+                </button>
+
+                <input
+                  type="number"
+                  min={1}
+                  max={totalPages}
+                  value={page}
+                  onChange={(e) => {
+                    const v = Number(e.target.value || 1);
+                    if (!isNaN(v)) setPage(Math.min(Math.max(1, v), totalPages));
+                  }}
+                  className="page-input"
+                />
+
+                <button className="btn-page" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
+                  Próxima →
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </main>
 
-      {/* FOOTER GLOBAL */}
       <footer className="footer">
         <p>Desenvolvido por K10 e Rembold</p>
       </footer>
-
-      {/* ===== ESTILO LOCAL ===== */}
-      <style jsx>{`
-        .extrato-container {
-          display: flex;
-          justify-content: center;
-          align-items: flex-start;
-          padding: 40px;
-          background: #f8f7f5;
-          min-height: 100vh;
-        }
-
-        .extrato-card {
-          background: #fff;
-          padding: 30px 40px;
-          border-radius: 15px;
-          width: 100%;
-          max-width: 900px;
-          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-        }
-
-        h1 {
-          font-size: 26px;
-          margin-bottom: 25px;
-          color: #181411;
-        }
-
-        .saldo-box {
-          margin-bottom: 30px;
-        }
-
-        .saldo-box h2 {
-          font-size: 22px;
-          color: #f27f0d;
-        }
-
-        .mostrar-saldo {
-          margin-left: 10px;
-          background: none;
-          border: none;
-          cursor: pointer;
-          font-size: 18px;
-        }
-
-        .btn-exportar {
-          background-color: #f27f0d;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          padding: 8px 14px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          margin-bottom: 15px;
-        }
-
-        .btn-exportar:hover {
-          opacity: 0.9;
-        }
-
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
-        }
-
-        th,
-        td {
-          padding: 10px;
-          border-bottom: 1px solid #eee;
-          text-align: left;
-          font-size: 14px;
-          color: #333;
-        }
-
-        th {
-          font-weight: 600;
-          color: #555;
-          border-bottom: 2px solid #f0eae4;
-        }
-
-        tr:hover {
-          background: #fff7f0;
-        }
-      `}</style>
     </div>
   );
 }

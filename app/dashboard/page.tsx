@@ -1,39 +1,66 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useRequireAuth } from "../hooks/useRequireAuth";
+import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import "./dashboard.css";
 
 export default function DashboardPage() {
-  const [info, setInfo] = useState<any>(null);
-  const [error, setError] = useState("");
+  const { user, atualizarUsuario } = useAuth();
   const router = useRouter();
+
   const [mostrarSaldo, setMostrarSaldo] = useState(false);
-  const saldo = 5000.0; // valor do saldo (pode vir de props, API etc.)
-  
+  const [saldo, setSaldo] = useState<number>(0);
+
+  const API = "http://localhost:4000";
+
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login");
-      return;
+    async function carregarUsuario() {
+      try {
+        const res = await fetch("/api/me", {
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          router.push("/login");
+          return;
+        }
+
+        const data = await res.json();
+        setSaldo(Number(data.saldo));
+        atualizarUsuario(data);
+
+      } catch (e) {
+        console.error("Erro ao buscar saldo:", e);
+        router.push("/login");
+      }
     }
 
-    fetch("/api/protected", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(async (res) => {
-        const data = await res.json();
-        if (res.ok) setInfo(data);
-        else setError(data.error);
-      })
-      .catch(() => setError("Erro ao conectar com servidor"));
-  }, [router]);
+    carregarUsuario();
+  }, []);
 
-  const logout = () => {
-    localStorage.removeItem("token");
+
+  const logout = async () => {
+  try {
+    await fetch("/api/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch (e) {
+    console.error("Erro ao deslogar:", e);
+  } finally {
+    localStorage.removeItem("user");
     router.push("/login");
-  };
+  }
+};
+
+
+  // Formatador de moeda
+  function formatarBRL(v: number) {
+    return v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+  }
 
   return (
     <div className="dashboard">
@@ -53,13 +80,15 @@ export default function DashboardPage() {
           alt="Avatar"
           className="avatar"
         />
+
         <div className="saldo-wrapper">
-          <h3>Olá, Pedro</h3>
+          <h3>Olá, {user?.nome ?? "Usuário"}</h3>
 
           <h3>
             Saldo:{" "}
-            {mostrarSaldo ? (
-              `R$ ${saldo.toLocaleString("pt-BR", {minimumFractionDigits: 2,})}`) : ("••••••")}
+            {mostrarSaldo
+              ? `R$ ${formatarBRL(saldo)}`
+              : "••••••"}
             <button
               type="button"
               className="mostrar-saldo"
@@ -70,16 +99,15 @@ export default function DashboardPage() {
             </button>
           </h3>
         </div>
-
-
-
       </section>
 
       <main className="main-content">
         <h1>O que você gostaria de fazer?</h1>
+
         <div className="cards">
 
-          <div className="card"
+          <div
+            className="card"
             onClick={() => router.push("/extrato")}
             style={{ cursor: "pointer" }}
           >
@@ -88,7 +116,6 @@ export default function DashboardPage() {
             <p>Consulte suas transações</p>
           </div>
 
-          {/* === CARD PIX CLICÁVEL === */}
           <div
             className="card active"
             onClick={() => router.push("/transferencia")}
@@ -99,7 +126,11 @@ export default function DashboardPage() {
             <p>Envie e receba dinheiro</p>
           </div>
 
-          <div className="card">
+          <div
+            className="card"
+            onClick={() => router.push("/chaves")}
+            style={{ cursor: "pointer" }}
+          >
             <div className="icon">🔑</div>
             <h3>Minhas Chaves</h3>
             <p>Gerencie suas chaves</p>

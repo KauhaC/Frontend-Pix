@@ -1,0 +1,66 @@
+.comp-page {
+  background-color: #f8f7f5;
+  font-family: "Manrope", sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.comp-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.comp-card {
+  background: white;
+  width: 450px;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.linha {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+}
+
+hr {
+  margin: 20px 0;
+  border: none;
+  height: 1px;
+  background: #ddd;
+}
+
+.ok {
+  color: green;
+}
+.erro {
+  color: red;
+}
+
+.btn-confirmar, .btn-voltar {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  margin-top: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-confirmar {
+  background-color: #f27f0d;
+  color: white;
+}
+
+.btn-voltar {
+  background-color: #ccc;
+  color: #222;
+}

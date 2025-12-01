@@ -1,0 +1,164 @@
+/* extrato.css */
+body, .extrato-page {
+  background-color: #f8f7f5;
+  font-family: "Manrope", sans-serif;
+  color: #181411;
+  margin: 0;
+  min-height: 100vh;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  border-bottom: 1px solid #f0eae4;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #f27f0d;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.logout-btn {
+  background-color: #f27f0d;
+  border: none;
+  padding: 10px 25px;
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.extrato-container {
+  padding: 30px 40px;
+}
+
+.extrato-container h1 {
+  margin: 0 0 18px 0;
+  font-size: 24px;
+}
+
+.extrato-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.extrato-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.extrato-table th, .extrato-table td {
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid #f0eae4;
+  font-size: 14px;
+}
+
+.extrato-table thead th {
+  font-weight: 700;
+  color: #333;
+}
+
+.tipo-entrada {
+  color: #0a8a3b;
+}
+
+.tipo-saida {
+  color: #d9534f;
+}
+
+.valor-entrada {
+  color: #0a8a3b;
+  font-weight: 700;
+}
+
+.valor-saida {
+  color: #d9534f;
+  font-weight: 700;
+}
+
+.chaves-col {
+  max-width: 260px;
+  word-break: break-all;
+}
+
+.extrato-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-page {
+  background: #f27f0d;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-page:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-input {
+  width: 60px;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+.btn-small {
+  background: #f27f0d;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.loader {
+  padding: 30px;
+  text-align: center;
+  color: #666;
+}
+
+.erro {
+  color: red;
+  margin: 12px 0;
+}
+
+.footer {
+  text-align: center;
+  padding: 20px;
+  background-color: #f8f7f5;
+  color: #7a6b5a;
+  font-size: 14px;
+}

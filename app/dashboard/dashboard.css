@@ -11,7 +11,7 @@ body {
   min-height: 100vh;
 }
 
-/* HEADER */
+
 .dashboard-header {
   display: flex;
   justify-content: space-between;
@@ -46,7 +46,7 @@ body {
 }
 
 
-/* USER INFO */
+
 .user-info {
   display: flex;
   align-items: center;
@@ -64,7 +64,6 @@ body {
   text-align: center;
 }
 
-/* MAIN CONTENT */
 .main-content {
   padding: 0 40px 40px;
   flex: 1;
@@ -120,7 +119,6 @@ body {
   color: #7a6b5a;
 }
 
-/* FOOTER */
 .footer {
   text-align: center;
   padding: 20px;

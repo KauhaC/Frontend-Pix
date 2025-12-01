@@ -1,36 +1,175 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🟧 **Sistema PIX -- Fullstack**
 
-## Getting Started
+Um sistema completo simulando operações PIX com backend em **Node.js +
+PostgreSQL** e frontend em **Next.js + TypeScript**, incluindo
+autenticação, transferências, chaves PIX, extrato paginado e testes E2E
+com Cypress.
 
-First, run the development server:
+------------------------------------------------------------------------
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🧑‍💻 **Autores**
+
+-   **Kauhã de Costa**
+-   **Matheus Rembold**
+
+------------------------------------------------------------------------
+
+# 🟧 Tecnologias Utilizadas
+
+## 🔹 **Backend (Node.js + TypeScript)**
+
+-   Node.js\
+-   TypeScript\
+-   Express\
+-   TypeORM\
+-   PostgreSQL\
+-   CORS\
+-   JWT Authentication\
+-   Zod *(validações opcionais)*
+
+## 🔸 **Frontend (Next.js + TypeScript)**
+
+-   Next.js 14 (App Router)\
+-   React\
+-   TypeScript\
+-   Axios\
+-   Zod\
+-   TailwindCSS\
+-   ContextAPI\
+-   Hooks e componentes funcionais
+
+## 🧪 **Testes E2E**
+
+-   Cypress\
+-   Interceptação de requisições\
+-   Fluxo completo automatizado:\
+    **Login → Transferência PIX → Extrato Paginado**
+
+------------------------------------------------------------------------
+
+# 🟧 Como Rodar o Projeto
+
+# 🗄️ **BACKEND**
+
+## 1️⃣ Instale as dependências
+
+``` bash
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 2️⃣ Configure o Banco PostgreSQL
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Crie o banco:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+    pix_db
 
-## Learn More
+Configure o `.env`:
 
-To learn more about Next.js, take a look at the following resources:
+    DB_HOST=localhost
+    DB_PORT=5432
+    DB_USER=postgres
+    DB_PASS=sua_senha
+    DB_NAME=pix_db
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 3️⃣ Rode o backend
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+``` bash
+npm run dev
+```
 
-## Deploy on Vercel
+📡 **Backend rodando em:**\
+http://localhost:4000
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+------------------------------------------------------------------------
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# 💻 **FRONTEND**
+
+## 4️⃣ Instale as dependências
+
+``` bash
+cd front
+npm install
+```
+
+## 5️⃣ Configure acesso ao backend
+
+Arquivo `.env.local`:
+
+    NEXT_PUBLIC_API_URL=http://localhost:4000
+
+## 6️⃣ Rode o frontend
+
+``` bash
+npm run dev
+```
+
+🌐 **Frontend rodando em:**\
+http://localhost:3000
+
+------------------------------------------------------------------------
+
+# 🧪 **Rodando os Testes (Cypress)**
+
+## 7️⃣ Instale o Cypress
+
+``` bash
+npm install cypress --save-dev
+```
+
+## 8️⃣ Abra o Cypress
+
+``` bash
+npx cypress open
+```
+
+Selecione o teste:
+
+    cypress/e2e/fluxo_pix.cy.ts
+
+Ou rode no terminal:
+
+``` bash
+npx cypress run
+```
+
+------------------------------------------------------------------------
+
+# 🔍 Fluxo Testado (E2E)
+
+-   ✔ Login com usuário válido\
+-   ✔ Iniciar transferência PIX\
+-   ✔ Validar modal de confirmação\
+-   ✔ Enviar PIX\
+-   ✔ Conferir extrato com paginação\
+-   ✔ Validar transação no histórico
+
+Atende exatamente o PDF do professor.
+
+------------------------------------------------------------------------
+
+# 📦 Estrutura Geral do Projeto
+
+    /back
+      /src
+        controllers
+        services
+        entities
+        routes
+        middlewares
+
+    /front
+      /app
+      /components
+      /contexts
+      /hooks
+      /services
+      /utils
+
+    cypress/
+
+------------------------------------------------------------------------
+
+# 🟧 **Obrigado por conferir o projeto!**
+
+Feito com dedicação para demonstrar um sistema PIX realista, seguro e
+escalável.

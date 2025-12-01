@@ -1,268 +1,302 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+
+const schema = z.object({
+  nome: z.string().min(3, "Nome muito curto"),
+  cpf_cnpj: z
+    .string()
+    .refine((val) => {
+      const n = val.replace(/\D/g, "");
+      return n.length === 11 || n.length === 14;
+    }, "Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido"),
+  telefone: z
+    .string()
+    .refine((val) => {
+      const n = val.replace(/\D/g, "");
+      return n.length >= 10 && n.length <= 11;
+    }, "Telefone inválido"),
+  rua: z.string().optional().nullable(),
+  bairro: z.string().optional().nullable(),
+  cidade: z.string().optional().nullable(),
+  senha: z.string().min(6, "Senha deve ter ao menos 6 caracteres"),
+  confirmarSenha: z.string().min(1, "Confirme a senha"),
+}).refine((data) => data.senha === data.confirmarSenha, {
+  path: ["confirmarSenha"],
+  message: "As senhas não coincidem",
+});
+
+type FormData = z.infer<typeof schema>;
 
 export default function RegisterPage() {
-  const [cpf, setCpf] = useState("");
-  const [nome, setNome] = useState("");
-  const [senha, setSenha] = useState("");
-  const [confirmarSenha, setConfirmarSenha] = useState("");
-  const [mostrarSenha, setMostrarSenha] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (senha !== confirmarSenha) {
-      setError("As senhas não coincidem.");
-      return;
+  const onCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value.replace(/\D/g, "");
+    if (v.length <= 11) {
+      v = v.replace(/(\d{3})(\d)/, "$1.$2")
+           .replace(/(\d{3})(\d)/, "$1.$2")
+           .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    } else {
+      v = v.slice(0, 14);
+      v = v.replace(/(\d{2})(\d)/, "$1.$2")
+           .replace(/(\d{3})(\d)/, "$1.$2")
+           .replace(/(\d{3})(\d)/, "$1/$2")
+           .replace(/(\d{4})(\d)/, "$1-$2");
     }
+    setValue("cpf_cnpj" as any, v);
+  };
+
+  const onTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value.replace(/\D/g, "");
+    if (v.length > 11) v = v.slice(0, 11);
+    if (v.length <= 10) {
+      v = v.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d)/, "$1-$2");
+    } else {
+      v = v.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
+    }
+    setValue("telefone" as any, v);
+  };
+
+  const onSubmit = async (dados: FormData) => {
+    setError(null);
+    setSuccess(null);
+
+    
+    const payload = {
+      nome: dados.nome,
+      cpf_cnpj: dados.cpf_cnpj.replace(/\D/g, ""),
+      telefone: dados.telefone.replace(/\D/g, ""),
+      rua: dados.rua || null,
+      bairro: dados.bairro || null,
+      cidade: dados.cidade || null,
+      senha: dados.senha,
+    };
 
     try {
-      const response = await fetch("/api/register", {
+      const resp = await fetch("http://localhost:4000/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cpf, nome, senha }),
+        body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const body = await resp.json();
 
-      if (response.ok) {
-        setSuccess("Conta criada com sucesso! Você já pode fazer login.");
-        setCpf("");
-        setNome("");
-        setSenha("");
-        setConfirmarSenha("");
-      } else {
-        setError(data.message || "Erro ao criar conta.");
+      if (!resp.ok) {
+        setError(body.error || body.message || "Erro ao criar conta");
+        return;
       }
-    } catch {
+
+      setSuccess("Conta criada com sucesso! Você será redirecionado para login...");
+      setTimeout(() => router.push("/login"), 1300);
+    } catch (err) {
+      console.error(err);
       setError("Erro de conexão com o servidor.");
     }
   };
 
+  const cpfVal = watch("cpf_cnpj") || "";
+  const telVal = watch("telefone") || "";
+
   return (
     <div className="register-container">
-      <form className="register-card" onSubmit={handleRegister}>
+      <div className="register-card">
         <h1>KRE BANK</h1>
         <h2>Crie sua conta</h2>
 
-        <label>
-          <span>Nome completo</span>
-          <input
-            type="text"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-            placeholder="Digite seu nome"
-            required
-          />
-        </label>
+        <form onSubmit={handleSubmit(onSubmit)} className="form">
+          <label>
+            <span>Nome completo</span>
+            <input {...register("nome")} placeholder="João da Silva" />
+            {errors.nome && <p className="erro">{String(errors.nome.message)}</p>}
+          </label>
 
-        <label>
-          <span>CPF</span>
-          <input
-            type="text"
-            value={cpf}
-            onChange={(e) => setCpf(e.target.value)}
-            placeholder="Digite seu CPF"
-            required
-          />
-        </label>
-
-        <label>
-          <span>Senha</span>
-          <div className="senha-wrapper">
+          <label>
+            <span>CPF / CNPJ</span>
             <input
-              type={mostrarSenha ? "text" : "password"}
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              placeholder="Digite sua senha"
-              required
+              {...register("cpf_cnpj")}
+              value={cpfVal}
+              onChange={onCpfCnpjChange}
+              placeholder="000.000.000-00 ou 00.000.000/0000-00"
             />
-            <button
-              type="button"
-              className="mostrar-senha"
-              onClick={() => setMostrarSenha(!mostrarSenha)}
-            >
-              {mostrarSenha ? "🙈" : "👁️"}
-            </button>
-          </div>
-        </label>
+            {errors.cpf_cnpj && <p className="erro">{String(errors.cpf_cnpj.message)}</p>}
+          </label>
 
-        <label>
-          <span>Confirmar senha</span>
-          <input
-            type="password"
-            value={confirmarSenha}
-            onChange={(e) => setConfirmarSenha(e.target.value)}
-            placeholder="Confirme sua senha"
-            required
-          />
-        </label>
+          <label>
+            <span>Telefone</span>
+            <input
+              {...register("telefone")}
+              value={telVal}
+              onChange={onTelefoneChange}
+              placeholder="(00) 90000-0000"
+            />
+            {errors.telefone && <p className="erro">{String(errors.telefone.message)}</p>}
+          </label>
 
-        {error && <p className="erro">{error}</p>}
-        {success && <p className="sucesso">{success}</p>}
+          <label>
+            <span>Rua (opcional)</span>
+            <input {...register("rua")} placeholder="Rua Exemplo, 100" />
+          </label>
 
-        <button type="submit" className="btn-criar">
-          Criar conta
-        </button>
+          <label>
+            <span>Bairro (opcional)</span>
+            <input {...register("bairro")} placeholder="Centro" />
+          </label>
 
-        <p className="ja-tem-conta">
-          Já tem uma conta? <a href="/login">Entrar</a>
-        </p>
-      </form>
+          <label>
+            <span>Cidade (opcional)</span>
+            <input {...register("cidade")} placeholder="Passo Fundo" />
+          </label>
 
-      <div className="register-image">
-        <img src="/login-image.png" alt="Imagem de fundo" />
+          <label>
+            <span>Senha</span>
+            <input {...register("senha")} type="password" placeholder="Senha (mín. 6 chars)" />
+            {errors.senha && <p className="erro">{String(errors.senha.message)}</p>}
+          </label>
+
+          <label>
+            <span>Confirmar senha</span>
+            <input {...register("confirmarSenha")} type="password" placeholder="Repita a senha" />
+            {errors.confirmarSenha && (
+              <p className="erro">{String(errors.confirmarSenha.message)}</p>
+            )}
+          </label>
+
+          {error && <p className="erro geral">{error}</p>}
+          {success && <p className="sucesso geral">{success}</p>}
+
+          <button disabled={isSubmitting} className="btn-criar" type="submit">
+            {isSubmitting ? "Criando..." : "Criar conta"}
+          </button>
+
+          <p className="ja-tem-conta">
+            Já tem uma conta? <a href="/login">Entrar</a>
+          </p>
+        </form>
       </div>
 
       <style jsx>{`
-        body {
-          background-color: #f9f6f3;
-          font-family: "Poppins", sans-serif;
-          margin: 0;
-          height: 100vh;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-
         .register-container {
+          background: #f8f7f5;
+          min-height: 100vh;
           display: flex;
           justify-content: center;
           align-items: center;
-          height: 100vh;
-          gap: 50px;
+          padding: 24px;
         }
 
         .register-card {
           background: #fff;
-          padding: 40px;
+          padding: 32px;
           border-radius: 12px;
-          width: 360px;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-          text-align: center;
+          width: 420px;
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
         }
 
         h1 {
-          font-size: 26px;
-          color: #000;
-          margin-bottom: 5px;
+          font-size: 28px;
+          color: #f27f0d;
+          margin: 0 0 4px 0;
+          text-align: center;
         }
 
         h2 {
-          font-size: 18px;
-          color: #333;
-          margin-bottom: 25px;
+          font-size: 16px;
+          color: #7a6b5a;
+          text-align: center;
+          margin-bottom: 18px;
         }
 
-        label {
+        form .form label {
           display: block;
-          text-align: left;
-          margin-bottom: 15px;
+          margin-bottom: 12px;
         }
 
-        label span {
+        span {
           display: block;
-          font-size: 14px;
-          font-weight: 500;
-          color: #222;
+          font-weight: 600;
+          color: #181411;
           margin-bottom: 6px;
         }
 
-        input {
+        input,
+        select {
           width: 100%;
           padding: 12px;
-          border: 1px solid #ddd;
           border-radius: 8px;
+          border: 1px solid #e8e1d9;
           font-size: 14px;
-          box-sizing: border-box;
-          transition: 0.2s;
+          transition: 0.15s;
         }
 
         input:focus {
-          border-color: #ff7b00;
           outline: none;
-          box-shadow: 0 0 4px rgba(255, 123, 0, 0.2);
-        }
-
-        .senha-wrapper {
-          display: flex;
-          align-items: center;
-          position: relative;
-        }
-
-        .mostrar-senha {
-          position: absolute;
-          right: 10px;
-          background: none;
-          border: none;
-          cursor: pointer;
-          font-size: 18px;
-        }
-
-        .btn-criar {
-          background-color: #ff7b00;
-          color: #fff;
-          border: none;
-          padding: 12px;
-          width: 100%;
-          border-radius: 8px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.3s;
-          margin-top: 10px;
-        }
-
-        .btn-criar:hover {
-          background-color: #e76e00;
+          border-color: #f27f0d;
+          box-shadow: 0 0 6px rgba(242, 127, 13, 0.12);
         }
 
         .erro {
-          color: red;
+          color: #d93025;
           font-size: 13px;
-          margin-bottom: 10px;
+          margin-top: 6px;
         }
 
         .sucesso {
-          color: green;
-          font-size: 13px;
-          margin-bottom: 10px;
+          color: #1b7a2d;
+          font-size: 14px;
+          margin-top: 6px;
+        }
+
+        .geral {
+          text-align: center;
+        }
+
+        .btn-criar {
+          margin-top: 10px;
+          background: #f27f0d;
+          color: #fff;
+          border: none;
+          width: 100%;
+          padding: 12px;
+          border-radius: 8px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .btn-criar:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
 
         .ja-tem-conta {
-          font-size: 14px;
-          margin-top: 20px;
-          color: #555;
+          margin-top: 12px;
+          text-align: center;
+          color: #7a6b5a;
         }
 
         .ja-tem-conta a {
-          color: #ff7b00;
-          font-weight: 600;
-          text-decoration: none;
+          color: #f27f0d;
+          font-weight: 700;
         }
 
-        .ja-tem-conta a:hover {
-          text-decoration: underline;
-        }
-
-        .register-image img {
-          width: 350px;
-          border-radius: 12px;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        @media (max-width: 768px) {
-          .register-container {
-            flex-direction: column;
-          }
-
-          .register-image img {
-            display: none;
+        @media (max-width: 480px) {
+          .register-card {
+            width: 100%;
+            padding: 20px;
           }
         }
       `}</style>

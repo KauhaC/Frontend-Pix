@@ -9,7 +9,6 @@ body,
     flex-direction: column;
 }
 
-/* HEADER */
 .dashboard-header {
     display: flex;
     justify-content: space-between;
@@ -51,7 +50,6 @@ body,
     background-color: #ccc;
 }
 
-/* FORM */
 .transferencia-container {
     display: flex;
     justify-content: center;
@@ -131,7 +129,6 @@ select:focus {
     font-weight: 500;
 }
 
-/* FOOTER */
 .footer {
     text-align: center;
     padding: 20px;
