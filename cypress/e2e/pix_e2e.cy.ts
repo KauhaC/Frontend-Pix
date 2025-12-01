@@ -1,97 +1,53 @@
-describe("Fluxo PIX - Login → Transferência (somente validação, sem enviar)", () => {
+describe("Fluxo completo PIX - Login -> Chaves -> Criar E-mail -> Dashboard -> Extrato", () => {
+  const cpf = "11111111111";     
+  const senha = "123456";        
+  const email = "remetente@kre.com"; 
 
-  const FRONT = "http://localhost:3000";
-  const API = "http://localhost:4000";
+  it("Deve realizar o fluxo completo", () => {
 
-  const remetenteCpf = "11111111111";
-  const senha = "123456";
-  const chaveDestino = "destinatario@kre.com";
+    // === LOGIN ===
+    cy.visit("/login");
 
-  beforeEach(() => {
-    cy.clearLocalStorage();
-    cy.clearCookies();
-  });
+    cy.get('input[placeholder="Digite seu CPF ou CNPJ"]').type(cpf);
+    cy.get('input[placeholder="Digite sua senha"]').type(senha);
+    cy.contains("button", "Entrar").click();
 
-  it("Login → Transferência → Abre modal de confirmação (sem enviar)", () => {
-
-    // -------------------------------------
-    // 1. LOGIN
-    // -------------------------------------
-    cy.visit(`${FRONT}/login`);
-
-    cy.get("input[placeholder='Digite seu CPF ou CNPJ']").type(remetenteCpf);
-    cy.get("input[placeholder='Digite sua senha']").type(senha);
-
-    cy.intercept("POST", "/api/login").as("loginReq");
-    cy.contains(/entrar/i).click();
-
-    cy.wait("@loginReq").its("response.statusCode").should("eq", 200);
     cy.url().should("include", "/dashboard");
 
 
-    // -------------------------------------
-    // 2. IR PARA A PÁGINA DE TRANSFERÊNCIA
-    // -------------------------------------
-    cy.contains("PIX").click();
-    cy.url().should("include", "/transferencia");
+    // === IR PARA CHAVES ===
+    cy.contains(".card h3", "Minhas Chaves").click();
+    cy.url().should("include", "/chaves");
 
 
-    // Seleciona E-mail
-    cy.get("select").select("E-mail");
+    // === CRIAR CHAVE DE E-MAIL ===
+    cy.contains("button", "Adicionar nova chave").click();
 
-    // intercept verificar chave
-    cy.intercept(
-      "GET",
-      `${API}/transacoes/verificar-chave*`
-    ).as("verificaChave");
+    // Selecionar tipo E = Email
+    cy.get("select").select("E");
 
+    // Input deve habilitar para digitar o e-mail
+    cy.get('input[type="text"]')
+      .should("not.be.disabled")
+      .type(email);
 
-    // Preenche chave
-    cy.contains("label", "Chave PIX")
-      .should("be.visible");
+    // Salvar chave
+    cy.contains("button", "Salvar").click();
 
-    // Avança
-    cy.contains("button", "Avançar").click();
-    cy.contains("label", "Chave PIX")
-  .parent()                    // pega o container pai
-  .find("input")               // encontra o input dentro do container
-  .type(chaveDestino, { delay: 0 });
-
-    cy.wait("@verificaChave").its("response.statusCode").should("eq", 200);
-
-    // Valida info do destinatário
-    cy.contains(/Enviar para:/i).should("be.visible");
-    cy.contains(/nome|destinatário|email/i).should("exist");
+    // Mensagem de sucesso
+    cy.contains("Chave criada com sucesso!").should("exist");
 
 
-    // -------------------------------------
-    // 3. VALOR E DESCRIÇÃO
-    // -------------------------------------
-    cy.get('input[type="number"]').type("10");
-    cy.get('input[placeholder="Opcional"]').type("Teste Cypress");
+    // === VOLTAR PARA DASHBOARD ===
+    cy.contains("button", "Voltar").click();
+    cy.url().should("include", "/dashboard");
 
 
-    // -------------------------------------
-    // 4. ABRIR APENAS O MODAL (SEM ENVIAR PIX)
-    // -------------------------------------
-    cy.contains(/confirmar/i).click({ force: true });
+    // === IR PARA EXTRATO ===
+    cy.contains(".card h3", "Extrato").click();
+    cy.url().should("include", "/extrato");
 
-
-    // VERIFICA SE O MODAL APARECEU
-    cy.get(".modal-container, .modal, [role='dialog']")
-      .should("be.visible");
-
-
-    cy.contains(/tem certeza|confirma/i).should("exist");
-
-    // MUITO IMPORTANTE: NÃO CLICAR NO "CONFIRMAR" DO MODAL
-    // Para não disparar o PIX real
-
-
-    // -------------------------------------
-    // 5. FINALIZA O TESTE
-    // -------------------------------------
-    cy.log("✔ Modal aberto com sucesso, teste finalizado.");
+    cy.contains("Extrato").should("exist");
+    cy.get("table").should("exist");
   });
-
 });

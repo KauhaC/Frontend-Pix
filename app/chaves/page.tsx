@@ -276,6 +276,7 @@ export default function ChavesPage() {
                 </div>
               ) : (
                 <input
+                  type="text"
                   {...register("valor")}
                   value={valor}
                   onChange={(e) => setValue("valor", e.target.value)}
